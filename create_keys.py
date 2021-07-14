@@ -1,5 +1,6 @@
 import psutil, re, subprocess
 
+#Get All Drives, even the ones we don't want
 def get_drives():
     devices = subprocess.run(['cat', '/proc/partitions'], capture_output=True, text=True).stdout.splitlines()
     drives = []
@@ -14,6 +15,7 @@ def get_drives():
                 drives.append(result.strip())
     return drives
 
+#Sort and find just USB drives
 def get_usbdrives(drives):
     usb_drives = []
     for drive in drives:
@@ -28,21 +30,22 @@ def get_usbdrives(drives):
                 usb_drives.append(drive)
     return usb_drives
 
+#Get raw size
 def get_device_size(device):
     sector = subprocess.run(['cat', f'/sys/block/{device}/size'], capture_output=True).stdout
     sector = int(sector) * 512 / 1024 / 1024
     return sector
 
-def get_device_info(device):
-    vendor = subprocess.run(['cat', f'/sys/block/{device}/device/vendor'], capture_output=True, text=True).stdout.splitlines()
-    model = subprocess.run(['cat', f'/sys/block/{device}/model'], capture_output=True, text=True).stdout.splitlines
+#Get device info, model, vendor, data size.
+def get_device_info(devices, device):
+    vendor = subprocess.run(['cat', f'/sys/block/{device}/device/vendor'], capture_output=True, text=True).stdout.strip()
+    model = subprocess.run(['cat', f'/sys/block/{device}/device/model'], capture_output=True, text=True).stdout.strip()
     size = subprocess.run(['cat', f'/sys/block/{device}/size'], capture_output=True).stdout
     size = int(size) * 512 / 1000000
+    devices[device] = {'vendor': vendor, 'model': model, 'size':size}
+    return devices
 
-
-
-    
-            
+          
 drives = get_drives()
 print(drives)
 usb_drives = get_usbdrives(drives)
