@@ -1,16 +1,41 @@
 #!/usr/bin/env python
-import psutil, re, subprocess, requests
+import psutil, re, subprocess, requests, os
+from tqdm import tqdm
 
-#Get All Drives, even the ones we don't want
+
+
+#Configuration 
 workdir = '/tmp/tmp.newbits'
 configurl = 'https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf?source=linux_recovery.sh'
 ostoolversion='0.9.2'
 
-def get_image(url, filename,resume=False):
+#Temporary files
+config='config.txt'
 
+#Helper Functions
+def cleanup(path, filename):
+    file_path = os.path.join(path, filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
 
+def get_file(url, filename,resume=False):
+    file_path = os.path.join(workdir,filename)
+    if resume is False:
+        cleanup(workdir, filename)
+        r = requests.get(configurl, stream=True, allow_redirects=True)
+        total_size = int(r.headers.get('content-length'))
+        initial_pos = 0
 
+        with open(file_path, 'wb') as data:
+            with tqdm(total=total_size, unit_scale=True,
+            desc=filename,initial=initial_pos, ascii=True) as pbar:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        data.write(chunk)
+                        pbar.update(len(chunk))
+    
 
+#Get All Drives, even the ones we don't want
 def get_drives():
     devices = subprocess.run(['cat', '/proc/partitions'], capture_output=True, text=True).stdout.splitlines()
     drives = []
@@ -55,4 +80,13 @@ def get_device_info(devices, device):
     devices[device] = {'vendor': vendor, 'model': model, 'size':size}
     return devices
 
+
+#DO STUFF
+if os.path.exists(workdir):
+    pass
+else:
+    os.makedirs(workdir)
+
+
+get_file(configurl, config)
           
