@@ -51,7 +51,7 @@ def get_file(url, filename,resume=False):
         
 
 
-#Get All Drives, even the ones we don't want
+#Get All Drives SCSI devices, even the ones we don't want
 def get_drives():
     devices = subprocess.run(['cat', '/proc/partitions'], capture_output=True, text=True).stdout.splitlines()
     drives = []
