@@ -1,6 +1,16 @@
-import psutil, re, subprocess
+#!/usr/bin/env python
+import psutil, re, subprocess, requests
 
 #Get All Drives, even the ones we don't want
+workdir = '/tmp/tmp.newbits'
+configurl = 'https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf?source=linux_recovery.sh'
+ostoolversion='0.9.2'
+
+def get_image(url, filename,resume=False):
+
+
+
+
 def get_drives():
     devices = subprocess.run(['cat', '/proc/partitions'], capture_output=True, text=True).stdout.splitlines()
     drives = []
@@ -46,7 +56,3 @@ def get_device_info(devices, device):
     return devices
 
           
-drives = get_drives()
-print(drives)
-usb_drives = get_usbdrives(drives)
-print(usb_drives)
