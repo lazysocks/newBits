@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import psutil, re, subprocess, requests, os
 from tqdm import tqdm
+from pathlib import Path
 
 
 
@@ -22,7 +23,7 @@ def get_file(url, filename,resume=False):
     file_path = os.path.join(workdir,filename)
     if resume is False:
         cleanup(workdir, filename)
-        r = requests.get(configurl, stream=True, allow_redirects=True)
+        r = requests.get(url, stream=True, allow_redirects=True)
         total_size = int(r.headers.get('content-length'))
         initial_pos = 0
 
@@ -33,7 +34,22 @@ def get_file(url, filename,resume=False):
                     if chunk:
                         data.write(chunk)
                         pbar.update(len(chunk))
+    if resume is True:
+        resume_header = {'Range':f'bytes={Path(file_path).stat().st_size}-'}
+        r = requests.get(url, stream=True, headers=resume_header)
+        total_size = int(r.headers.get('content-length'))
+        initial_pos = Path(file_path).stat().st_size
+        with open(file_path, 'ab') as data:
+             with tqdm(total=total_size, unit_scale=True,
+            desc=filename,initial=initial_pos, ascii=True) as pbar:
+                for chunk in r.iter_content(chunk_size=1024):
+                    if chunk:
+                        data.write(chunk)
+                        pbar.update(len(chunk))
+
     
+        
+
 
 #Get All Drives, even the ones we don't want
 def get_drives():
@@ -87,6 +103,7 @@ if os.path.exists(workdir):
 else:
     os.makedirs(workdir)
 
-
+testurl = 'https://dl.google.com/dl/edgedl/chromeos/recovery/chromeos_13904.55.0_asuka_recovery_stable-channel_mp.bin.zip'
 get_file(configurl, config)
+get_file(testurl, 'test.zip', resume=True)
           
