@@ -60,19 +60,19 @@ def populate_devices(dict):
         lines = data.readlines()
         for i, line in enumerate(lines):
             if re.search(pattern, line):
-                device = line.strip()
-                device = line.strip('name=')
-                version = lines[i+1].strip('version=')
-                desc = lines[i+2].strip('desc=')
-                channel = lines[i+3].strip('channel=')
-                hwidmatch = lines[i+4].strip('hwidmatch=')
-                hwid = lines[i+5].strip('hwid=')
-                md5 = lines[i+6].strip('md5=')
-                sha1 = lines[i+7].strip('sha1=')
-                zipfilesize = lines[i+8].strip('zipfilesize=')
-                filename = lines[i+9].strip('file=')
-                filesize = lines[i+10].strip('filesize=')
-                url = lines[i+11].strip('url=')
+                line = line.strip()
+                device = line.replace('name=', '')
+                version = lines[i+1].replace('version=', '')
+                desc = lines[i+2].replace('desc=', '')
+                channel = lines[i+3].replace('channel=', '')
+                hwidmatch = lines[i+4].replace('hwidmatch=', '')
+                hwid = lines[i+5].replace('hwid=', '')
+                md5 = lines[i+6].replace('md5=', '')
+                sha1 = lines[i+7].replace('sha1=', '')
+                zipfilesize = lines[i+8].replace('zipfilesize=', '')
+                filename = lines[i+9].replace('file=', '')
+                filesize = lines[i+10].replace('filesize=', '')
+                url = lines[i+11].replace('url=', '')
                 dict[device] = { 'version': version.strip(), 'desc': desc.strip(), 'channel': channel.strip(),'hwidmatch': hwidmatch.strip(), 'hwid': hwid.strip(), 'md5': md5.strip(), 'sha1': sha1.strip(), 'zipfilesize': zipfilesize.strip(), 'file': filename.strip(), 'filesize': filesize.strip(), 'url': url.strip() }
 
 
