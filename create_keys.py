@@ -9,7 +9,7 @@ from pathlib import Path
 workdir = '/tmp/tmp.newbits'
 configurl = 'https://dl.google.com/dl/edgedl/chromeos/recovery/recovery.conf?source=linux_recovery.sh'
 ostoolversion='0.9.2'
-
+images = {}
 #Temporary files
 config='config.txt'
 
@@ -101,13 +101,14 @@ def get_choices():
     return final_device
 
 class Image:
-    def __init__(self, name, channel, hwidmatch, url, sha1, filename):
+    def __init__(self, name, channel, hwidmatch, url, sha1, filename, zipfilesize):
         self.name = name
         self.channel = channel
         self.hwidmatch = hwidmatch
         self.url = url
         self.sha1 = sha1
         self.filename = filename
+        self.zipfilesize = zipfilesize
 
 #Get All Drives SCSI devices, even the ones we don't want
 def get_drives():
@@ -156,23 +157,39 @@ def get_device_info(devices, device):
 
 
 #DO STUFF
-if os.path.exists(workdir):
-    pass
-else:
-    os.makedirs(workdir)
 
+def run_recovery():
+    if os.path.exists(workdir):
+        pass
+    else:
+        os.makedirs(workdir)
+        
+    print('Downloading recovery file from Google')
+    get_file(configurl, config)
+    print('Retrieving model information')
+    populate_devices(images)
+    choice = get_choices()
+    image = Image(choice, images[choice]['channel'], images[choice]['hwidmatch'],images[choice]['url'], images[choice]['sha1'], images[choice]['file'], images[choice]['zipfilesize'])
+    msg = f'''
+    You selected:
+    {image.name}
+    channel: {image.channel}
+    pattern: {image.hwidmatch}
+    '''
+    print(msg)
+    while ( res:=input("Do you want to continue? (Enter y/n)").lower() ) not in {"y", "n"}: pass
 
-images = {}
+    if res == 'y':
+        if os.path.exists(os.path.join(workdir, image.filename)):
+            if Path(os.path.join(workdir, image.filename)).stat().st_size == image.zipfilesize:
+                pass
+            else:
+                get_file(image.url, image.filename, resume=True)
+        else:
+            get_file(image.url, image.filename)
+    else:
+        print('Exiting program..')
+        exit()
 
-print('Downloading recovery file from Google')
-print('Retrieving model information')
-populate_devices(images)
-get_file(configurl, config)
-
-choice = get_choices()
-image = Image(choice, images[choice]['channel'], images[choice]['hwidmatch'],images[choice]['url'], images[choice]['sha1'], images[choice]['file'])
-
-print(image.name)
-print(image.channel)
-print(image.hwidmatch)
-
+if __name__ == "__main__":
+    run_recovery()
