@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import psutil, re, subprocess, requests, os, collections
+import psutil, re, subprocess, requests, os, collections, hashlib
 from tqdm import tqdm
 from pathlib import Path
 
@@ -23,6 +23,20 @@ def cleanup(path, filename):
     file_path = os.path.join(path, filename)
     if os.path.exists(file_path):
         os.remove(file_path)
+def check_sha1(filename, filehash):
+    sha = hashlib.sha1()
+    with open(filename, 'rb') as f:
+        chunk = f.read()
+        if chunk:
+            sha.update(chunk)
+    try:
+        assert sha.hexdigest() == filehash
+    except AssertionError:
+        print('File is corrupt, restart program!')
+    else:
+        print('File has been validated!')
+
+
 
 #Retrieve file from web
 def get_file(url, filename,resume=False):
@@ -180,9 +194,10 @@ def run_recovery():
     while ( res:=input("Do you want to continue? (Enter y/n)").lower() ) not in {"y", "n"}: pass
 
     if res == 'y':
-        if os.path.exists(os.path.join(workdir, image.filename)):
-            if Path(os.path.join(workdir, image.filename)).stat().st_size == image.zipfilesize:
-                pass
+        file_path = os.path.join(workdir, image.filename)
+        if os.path.exists(file_path):
+            if Path(file_path).stat().st_size == image.zipfilesize:
+                print('File already exists, skipping download!')
             else:
                 get_file(image.url, image.filename, resume=True)
         else:
@@ -190,6 +205,7 @@ def run_recovery():
     else:
         print('Exiting program..')
         exit()
+    check_sha1(file_path, image.sha1)
 
 if __name__ == "__main__":
     run_recovery()
