@@ -52,6 +52,7 @@ def get_file(url, filename,resume=False):
                     if chunk:
                         data.write(chunk)
                         pbar.update(len(chunk))
+
 #Populate devices from config into dictionary
 def populate_devices(dict):
     config_file = os.path.join(workdir, config)
@@ -75,6 +76,38 @@ def populate_devices(dict):
                 url = lines[i+11].replace('url=', '')
                 dict[device] = { 'version': version.strip(), 'desc': desc.strip(), 'channel': channel.strip(),'hwidmatch': hwidmatch.strip(), 'hwid': hwid.strip(), 'md5': md5.strip(), 'sha1': sha1.strip(), 'zipfilesize': zipfilesize.strip(), 'file': filename.strip(), 'filesize': filesize.strip(), 'url': url.strip() }
 
+#Get Choices
+def get_choices():
+    choices = {}
+    full_list = False
+    image = input('If you know the Model string displayed at the recovery screen,\n type some or all of it; otherwise just press Enter: ')
+    image_prefix = image.upper()[0:9]
+    for i, device in enumerate(images, start=1):
+        if re.search(image_prefix, images[device]['hwidmatch']):
+            choices[i] = device
+    if choices:
+        pass
+    else:
+        for i, device in enumerate(images, start=1):
+            choices[i] = device
+        full_list = True
+    for k, v in choices.items():
+        print(f'{k}: {v}')
+    if full_list:
+        print('Could not find image based on Model string.\nPlease check list above for image.')
+    print('Please select a recovery image and press Enter:' )
+    selected_device = input()
+    final_device = choices.get(int(selected_device))
+    return final_device
+
+class Image:
+    def __init__(self, name, channel, hwidmatch, url, sha1, filename):
+        self.name = name
+        self.channel = channel
+        self.hwidmatch = hwidmatch
+        self.url = url
+        self.sha1 = sha1
+        self.filename = filename
 
 #Get All Drives SCSI devices, even the ones we don't want
 def get_drives():
@@ -128,7 +161,18 @@ if os.path.exists(workdir):
 else:
     os.makedirs(workdir)
 
-testurl = 'https://dl.google.com/dl/edgedl/chromeos/recovery/chromeos_13904.55.0_asuka_recovery_stable-channel_mp.bin.zip'
+
+images = {}
+
+print('Downloading recovery file from Google')
+print('Retrieving model information')
+populate_devices(images)
 get_file(configurl, config)
-get_file(testurl, 'test.zip', resume=True)
+
+choice = get_choices()
+image = Image(choice, images[choice]['channel'], images[choice]['hwidmatch'],images[choice]['url'], images[choice]['sha1'], images[choice]['file'])
+
+print(image.name)
+print(image.channel)
+print(image.hwidmatch)
 
