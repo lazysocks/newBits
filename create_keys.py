@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import psutil, re, subprocess, requests, os, collections, hashlib
+import psutil, re, subprocess, requests, os, collections, hashlib, shutil
 from tqdm import tqdm
 from pathlib import Path
 
@@ -18,6 +18,14 @@ config='config.txt'
 def makehash():
     return collections.defaultdict(makehash)
 
+def check_disk_space(required, mount):
+    total, used, free = shutil.disk_usage(mount)
+    if required >= free:
+        print('Not enough disk space to download image')
+        exit()
+    else:
+        return True
+
 #Cleanup files
 def cleanup(path, filename):
     file_path = os.path.join(path, filename)
@@ -35,6 +43,7 @@ def check_sha1(filename, filehash):
         print('File is corrupt, restart program!')
     else:
         print('File has been validated!')
+        return True
 
 
 
@@ -173,11 +182,12 @@ def get_device_info(devices, device):
 #DO STUFF
 
 def run_recovery():
+    print('Checking for Working Directory...')
     if os.path.exists(workdir):
-        pass
+        print('Working Directory Found!')
     else:
+        print('Creating Working Directory!')
         os.makedirs(workdir)
-        
     print('Downloading recovery file from Google')
     get_file(configurl, config)
     print('Retrieving model information')
@@ -194,18 +204,20 @@ def run_recovery():
     while ( res:=input("Do you want to continue? (Enter y/n)").lower() ) not in {"y", "n"}: pass
 
     if res == 'y':
-        file_path = os.path.join(workdir, image.filename)
+        filename = image.filename + '.zip'
+        file_path = os.path.join(workdir, filename)
+        check_disk_space(int(image.zipfilesize), workdir)
         if os.path.exists(file_path):
             if Path(file_path).stat().st_size == image.zipfilesize:
                 print('File already exists, skipping download!')
             else:
-                get_file(image.url, image.filename, resume=True)
+                get_file(image.url, filename, resume=True)
         else:
-            get_file(image.url, image.filename)
+            get_file(image.url, filename)
     else:
         print('Exiting program..')
         exit()
-    check_sha1(file_path, image.sha1)
+    #if check_sha1(file_path, image.sha1):
 
 if __name__ == "__main__":
     run_recovery()
