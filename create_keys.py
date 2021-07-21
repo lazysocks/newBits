@@ -75,6 +75,16 @@ def get_file(url, filename,resume=False):
                     if chunk:
                         data.write(chunk)
                         pbar.update(len(chunk))
+                    
+def unpack_image(zipfile):
+    zip_path = os.path.join(workdir, zipfile)
+    image_file = re.sub('.zip', '.bin', zipfile)
+    image_path = os.path.join(workdir, image_file)
+    if os.path.exists(zip_path):
+        if os.path.exists(image_path):
+            cleanup(workdir, image_path)
+        subprocess.run(['unzip', f'{zip_path}', '-d', f'{workdir}'])
+
 
 #Populate devices from config into dictionary
 def populate_devices(dict):
@@ -217,7 +227,20 @@ def run_recovery():
     else:
         print('Exiting program..')
         exit()
-    #if check_sha1(file_path, image.sha1):
+    if check_sha1(file_path, image.sha1):
+        print('Gathering infromation about USB drives..')
+    else:
+        print('Image did not pass SHA1 hash check..exiting.')
+        exit()
+    
+    print('Unpacking Image..')
+    unpack_image(filename)
+    usb_drives = get_usbdrives(get_drives)
+    print(usb_drives)
+    while ( res:=input("Process Complete.\nDo you want to cleanup all files? (Enter y/n)").lower() ) not in {"y", "n"}: pass
+    if res == 'y':
+        cleanup(workdir,filename)
+        cleanup(workdir, image.filename)
 
 if __name__ == "__main__":
     run_recovery()
