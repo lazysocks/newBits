@@ -76,15 +76,29 @@ def get_file(url, filename,resume=False):
                         data.write(chunk)
                         pbar.update(len(chunk))
                     
-def unpack_image(zipfile):
+def unpack_image(zipfile, filesize):
     zip_path = os.path.join(workdir, zipfile)
-    image_file = re.sub('.zip', '.bin', zipfile)
+    image_file = re.sub('.zip', '', zipfile)
     image_path = os.path.join(workdir, image_file)
     if os.path.exists(zip_path):
         if os.path.exists(image_path):
             cleanup(workdir, image_path)
         subprocess.run(['unzip', f'{zip_path}', '-d', f'{workdir}'])
-
+    print('Checking bin file size matches..')
+    print(f'Local file size is: {Path(image_path).stat().st_size} ')
+    print(f'Expected file size is: {filesize}')
+    if Path(image_path).stat().st_size == int(filesize):
+        print('File size matches, proceeding..')
+    else:
+        print('File size does not match.. exiting program.')
+        exit()
+    
+def apply_image(image_file, usb_keys):
+    image_file = re.sub('.zip', '', image_file)
+    image_path = os.path.join(workdir, image_file)
+    for key in usb_keys:
+        print(f'Applying image {image_file} to key /dev/{key}')
+        subprocess.run(['dd', 'bs=4194304', f'of=/dev/{key}', f'if={image_path}', 'conv=sync', 'status=progress'])
 
 #Populate devices from config into dictionary
 def populate_devices(dict):
@@ -134,7 +148,7 @@ def get_choices():
     return final_device
 
 class Image:
-    def __init__(self, name, channel, hwidmatch, url, sha1, filename, zipfilesize):
+    def __init__(self, name, channel, hwidmatch, url, sha1, filename, zipfilesize, filesize):
         self.name = name
         self.channel = channel
         self.hwidmatch = hwidmatch
@@ -142,6 +156,15 @@ class Image:
         self.sha1 = sha1
         self.filename = filename
         self.zipfilesize = zipfilesize
+        self.filesize = filesize
+
+class USB:
+    def __init__(self, device, vendor, model, size):
+        self.device = device
+        self.vendor = vendor
+        self.model = model
+        self.size = size
+    
 
 #Get All Drives SCSI devices, even the ones we don't want
 def get_drives():
@@ -162,7 +185,6 @@ def get_drives():
 def get_usbdrives(drives):
     usb_drives = []
     for drive in drives:
-
         drive_type = subprocess.run(['cat', f'/sys/block/{drive}/device/type'], capture_output=True, text=True).stdout.strip()
         drive_removable = subprocess.run(['cat', f'/sys/block/{drive}/removable'], capture_output=True, text=True).stdout.strip()
         drive_link = subprocess.run(['readlink', '-f', f'/sys/block/{drive}'], capture_output=True, text=True).stdout.strip()
@@ -188,6 +210,11 @@ def get_device_info(devices, device):
     devices[device] = {'vendor': vendor, 'model': model, 'size':size}
     return devices
 
+def print_device_info(usb_devices):
+    for usb_key in usb_devices:
+        info = get_device_info()
+    
+
 
 #DO STUFF
 
@@ -203,7 +230,7 @@ def run_recovery():
     print('Retrieving model information')
     populate_devices(images)
     choice = get_choices()
-    image = Image(choice, images[choice]['channel'], images[choice]['hwidmatch'],images[choice]['url'], images[choice]['sha1'], images[choice]['file'], images[choice]['zipfilesize'])
+    image = Image(choice, images[choice]['channel'], images[choice]['hwidmatch'],images[choice]['url'], images[choice]['sha1'], images[choice]['file'], images[choice]['zipfilesize'], images[choice]['filesize'])
     msg = f'''
     You selected:
     {image.name}
@@ -228,15 +255,31 @@ def run_recovery():
         print('Exiting program..')
         exit()
     if check_sha1(file_path, image.sha1):
-        print('Gathering infromation about USB drives..')
+        pass
     else:
         print('Image did not pass SHA1 hash check..exiting.')
         exit()
     
     print('Unpacking Image..')
-    unpack_image(filename)
-    usb_drives = get_usbdrives(get_drives)
-    print(usb_drives)
+    unpack_image(filename, image.filesize)
+    print('Gathering infromation about USB drives..')
+    usb_drives = get_usbdrives(get_drives())
+    usbdict = {}
+    for usb_drive in usb_drives:
+        get_device_info(usbdict, usb_drive)
+    
+    
+    for device, info in usbdict.items():
+        print(f'Device: /dev/{device}')
+        for key in info:
+            print(f'{key}: {info[key]}')
+        print('\n')
+    
+    print('These devices were found!')
+    while ( res:=input("Proceed devices listed above? CAUTION: THIS WILL ERASE ALL DATA ON LISTED DEVICES! (Enter y/n)").lower() ) not in {"y", "n"}: pass
+    if res == 'y':
+        
+        
     while ( res:=input("Process Complete.\nDo you want to cleanup all files? (Enter y/n)").lower() ) not in {"y", "n"}: pass
     if res == 'y':
         cleanup(workdir,filename)
