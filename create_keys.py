@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-import psutil, re, subprocess, requests, os, collections, hashlib, shutil
+import psutil, re, subprocess, requests, os, collections, hashlib, shutil, ctypes
 from tqdm import tqdm
 from pathlib import Path
+from subprocess import Popen
 
 
 
@@ -14,6 +15,9 @@ images = {}
 config='config.txt'
 
 #Helper Functions
+def isAdmin():
+    is_admin = (os.getuid() == 0)
+    return is_admin
 
 def makehash():
     return collections.defaultdict(makehash)
@@ -94,11 +98,16 @@ def unpack_image(zipfile, filesize):
         exit()
     
 def apply_image(image_file, usb_keys):
+    cmds = []
     image_file = re.sub('.zip', '', image_file)
     image_path = os.path.join(workdir, image_file)
     for key in usb_keys:
         print(f'Applying image {image_file} to key /dev/{key}')
-        subprocess.run(['dd', 'bs=4194304', f'of=/dev/{key}', f'if={image_path}', 'conv=sync', 'status=progress'])
+        cmd = f'dd bs=4194304 of=/dev/{key} if={image_path} conv=sync status=progress'
+        cmds.append(cmd)
+    procs = [ Popen(i, shell=True) for i in cmds ]
+    for p in procs:
+        p.wait()
 
 #Populate devices from config into dictionary
 def populate_devices(dict):
@@ -219,6 +228,11 @@ def print_device_info(usb_devices):
 #DO STUFF
 
 def run_recovery():
+    if isAdmin():
+        pass
+    else:
+        print('Not running with admin priviledges!')
+        exit()
     print('Checking for Working Directory...')
     if os.path.exists(workdir):
         print('Working Directory Found!')
@@ -278,7 +292,7 @@ def run_recovery():
     print('These devices were found!')
     while ( res:=input("Proceed devices listed above? CAUTION: THIS WILL ERASE ALL DATA ON LISTED DEVICES! (Enter y/n)").lower() ) not in {"y", "n"}: pass
     if res == 'y':
-        
+        apply_image(image.filename, usb_drives)
         
     while ( res:=input("Process Complete.\nDo you want to cleanup all files? (Enter y/n)").lower() ) not in {"y", "n"}: pass
     if res == 'y':
