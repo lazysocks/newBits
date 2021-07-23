@@ -290,6 +290,7 @@ def run_recovery():
         print('\n')
     
     print('These devices were found!')
+    print(f'Total number of devices: {len(usb_drives)}')
     while ( res:=input("Proceed devices listed above? CAUTION: THIS WILL ERASE ALL DATA ON LISTED DEVICES! (Enter y/n)").lower() ) not in {"y", "n"}: pass
     if res == 'y':
         apply_image(image.filename, usb_drives)
