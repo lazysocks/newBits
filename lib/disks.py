@@ -1,12 +1,11 @@
 import shutil, re, subprocess
-from utility import convert_size
+from .utility import convert_size
 
 class USB:
     def __init__(self):
         self.drives = self.get_drives()
         self.removable = self.get_removable(self.drives)
-        self.msg = print()
-        
+                
 
     def get_drives(self):
         devices = subprocess.run(['cat', '/proc/partitions'], capture_output=True, text=True).stdout.splitlines()
@@ -40,6 +39,26 @@ class USB:
             size = subprocess.run(['cat', f'/sys/block/{device}/size'], capture_output=True).stdout
             removable_drives[device] = {'vendor': vendor, 'model': model, 'human_readable_size': convert_size(int(size)), 'size': int(size)}
         return removable_drives
+
+    def print_disk_info(self, drives):
+        for device, device_info in drives:
+            msg = f'''
+            Device Make/Model:  {device_info['vendor']} {device_info['model']}   
+            Device path: /dev/{device}
+            Size: {device_info['human_readable_size']}
+
+            '''
+            print(msg)
+
+    def prompt_to_proceed(self):
+        self.print_disk_info(self.removable)
+        print('These devices were found!')
+        print(f'Total number of devices found: {len(self.removable)}')
+        while ( res:=input("Proceed with the devices listed above?  CAUTION: THIS WILL ERASE ALL DATA ON LISTED DEVICES! (Enter y/n)").lower() ) not in {"y", "n"}: pass
+        if res == 'y':
+            return self.proceed
+        
+            
 
 
 
