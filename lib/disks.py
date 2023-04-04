@@ -41,7 +41,7 @@ class USB:
         return removable_drives
 
     def print_disk_info(self, drives):
-        for device, device_info in drives:
+        for device, device_info in drives.items():
             msg = f'''
             Device Make/Model:  {device_info['vendor']} {device_info['model']}   
             Device path: /dev/{device}
