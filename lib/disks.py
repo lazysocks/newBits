@@ -41,6 +41,7 @@ class USB:
         return removable_drives
 
     def print_disk_info(self):
+        print('These devices were found!')
         for device, device_info in self.removable.items():
             msg = f'''
             Device Make/Model:  {device_info['vendor']} {device_info['model']}   
@@ -52,20 +53,15 @@ class USB:
 
     def prompt_to_proceed(self):
         self.print_disk_info()
-        print('These devices were found!')
         print(f'Total number of devices found: {len(self.removable)}')
         while ( res:=input("Proceed with the devices listed above?  CAUTION: THIS WILL ERASE ALL DATA ON LISTED DEVICES! (Enter y/n)").lower() ) not in {"y", "n"}: pass
         if res == 'y':
-            return self.proceed
+            proceed = True
+            return proceed
+        else:
+           proceed = False
+           return proceed
         
-            
-
-
-
-
-
-    
-
 
 
 def check_disk_space(required, mount):
@@ -81,8 +77,3 @@ def get_device_size(device):
     sector = subprocess.run(['cat', f'/sys/block/{device}/size'], capture_output=True).stdout
     sector = int(sector) * 512 / 1024 / 1024
     return sector
-
-
-def print_device_info(usb_devices):
-    for usb_key in usb_devices:
-        info = get_device_info()
