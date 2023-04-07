@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 
-import lib.settings as settings
-import lib.utility as utility
-import lib.data as data
+from lib import settings, data, disks, utility
 import os
 
 # %%
@@ -27,16 +25,12 @@ def run_recovery():
     print('Downloading recovery file form Google!')
     utility.get_file(settings.url, settings.recovery_file, settings.recovery_file_path)
     
-    #Get data from recovery file
-    results = data.get_json_data(settings.recovery_file_path)
+    #Get device choice and print device details
+    device = data.Image(settings.recovery_file_path)
 
-    #Filter choice set by prefix
-    choices = data.find_model_keys(results)
+    #Get USB Drives
+    usb_keys = disks.USB()
 
-    #Get final device selection
-    selected_device = data.get_choice(choices)
-
-    utility.print_device_info(selected_device)
 
     #Confirm device selection or exit
     while ( res:=input("Do you want to continue? (Enter y/n)").lower() ) not in {"y", "n"}: pass

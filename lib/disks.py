@@ -47,7 +47,6 @@ class USB:
             Device Make/Model:  {device_info['vendor']} {device_info['model']}   
             Device path: /dev/{device}
             Size: {device_info['human_readable_size']}
-
             '''
             print(msg)
 
