@@ -60,6 +60,9 @@ def run_recovery():
 
         #time to apply image
         utility.apply_image(filedir['imagefile'], usb_keys.removable)
+
+        #end program and cleanup?
+        utility.end_cleanup(filedir['zipfile', filedir['imagefile'])
     else:
         print("Aborting program...")
         exit()

@@ -75,9 +75,9 @@ def unpack_zipfile(zipfile, imagefile, imagefilesize):
             cleanup(imagefile)
         subprocess.run(['unzip', f'{zipfile}', '-d', f'{settings.workdir}'])
         print('Checking bin file size matches..')
-        print(f'Local file size is {Path(imagefile).stat().st_size}')
+        print(f'Local file size is {convert_size(Path(imagefile).stat().st_size)}')
         if Path(imagefile).stat().st_size == int(imagefilesize):
-            print('File sie matches, proceeding..')
+            print('File size matches, proceeding..')
         else:
             print('File size does not match.. exiting program.')
             exit()
@@ -86,10 +86,18 @@ def apply_image(image_file, usb_keys):
     cmds = []
     for key in usb_keys:
         print(f'Applying image {image_file} to key /dev/{key}')
-        cmd = f'dd bs=4194304 of=/dev/{key} if={image_path} conv=sync status=progress'
+        cmd = f'dd bs=4194304 of=/dev/{key} if={image_file} conv=sync status=progress'
         cmds.append(cmd)
     procs = [ Popen(i, shell=True) for i in cmds ]
     for p in procs:
         p.wait()
+
+def end_cleanup(zipfile, imagefile):
+    while ( res:=input("Process Complete.\nDo you want to cleanup all files? (Enter y/n)").lower() ) not in {"y", "n"}: pass
+    if res == 'y':
+        cleanup(zipfile)
+        cleanup(imagefile)
+    if res == 'n':
+        exit()
 
     
