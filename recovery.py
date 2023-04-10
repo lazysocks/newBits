@@ -43,7 +43,7 @@ def run_recovery():
         #set paths for image files
         filedir = settings.device_image_paths(device.choice)
         if os.path.exists(filedir['zipfile']):
-            if Path(file_path).stat().st_size == device.choice['zipfilesize']:
+            if Path(filedir['zipfile']).stat().st_size == device.choice['zipfilesize']:
                 print('File already exists, skipping download!')
             else:
                 utility.get_file(device.choice['url'], device.choice['file'] + '.zip', filedir['zipfile'], resume=True)
