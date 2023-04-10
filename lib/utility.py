@@ -75,7 +75,7 @@ def unpack_zipfile(zipfile, imagefile, imagefilesize):
             cleanup(imagefile)
         subprocess.run(['unzip', f'{zipfile}', '-d', f'{settings.workdir}'])
         print('Checking bin file size matches..')
-        print(f'Local file size is {Path(imagefil).stat().st_size}')
+        print(f'Local file size is {Path(imagefile).stat().st_size}')
         if Path(imagefile).stat().st_size == int(imagefilesize):
             print('File sie matches, proceeding..')
         else:
