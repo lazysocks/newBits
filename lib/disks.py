@@ -65,7 +65,7 @@ class USB:
 
 def check_disk_space(required, mount):
     total, used, free = shutil.disk_usage(mount)
-    if required >= free:
+    if int(required) >= free:
         print('Not enough disk space to download image')
         exit()
     else:

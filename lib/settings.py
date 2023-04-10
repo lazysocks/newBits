@@ -15,5 +15,5 @@ def device_image_paths(selected_device):
     imagefile = os.path.join(workdir, imagefile)
     zipfile = selected_device['file'] + '.zip'
     zipfile = os.path.join(workdir, zipfile)
-    paths = [imagefile, zipeifle]
+    paths = { 'imagefile': imagefile, 'zipfile': zipfile}
     return paths

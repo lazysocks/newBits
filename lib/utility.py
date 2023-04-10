@@ -2,6 +2,7 @@
 import os, collections, hashlib, requests, math
 from tqdm import tqdm
 from pathlib import Path
+from lib import settings
 
 #Helper Functions
 def isAdmin():
@@ -67,25 +68,21 @@ def get_file(url, filename, file_path,resume=False):
                         data.write(chunk)
                         pbar.update(len(chunk))
 
-
-def unpack_image(files, filesize):
-    if os.path.exists(files[1]):
-        if os.path.exists(files[0]):
-            cleanup(files[0])
-        subprocess.run(['unzip', f'{files[11]}', '-d', f'{workdir}'])
-    print('Checking bin file size matches..')
-    print(f'Local file size is: {Path(image_path).stat().st_size} ')
-    print(f'Expected file size is: {filesize}')
-    if Path(image_path).stat().st_size == int(filesize):
-        print('File size matches, proceeding..')
-    else:
-        print('File size does not match.. exiting program.')
-        exit()
+def unpack_zipfile(zipfile, imagefile, imagefilesize):
+    if os.path.exists(zipfile):
+        if os.path.exists(imagefile):
+            cleanup(imagefile)
+        subprocess.run(['unzip', f'{zipfile}', '-d', f'{settings.workdir}'])
+        print('Checking bin file size matches..')
+        print(f'Local file size is {Path(imagefil).stat().st_size}')
+        if Path(imagefile).stat().st_size == int(imagefilesize):
+            print('File sie matches, proceeding..')
+        else:
+            print('File size does not match.. exiting program.')
+            exit()
     
 def apply_image(image_file, usb_keys):
     cmds = []
-    image_file = re.sub('.zip', '', image_file)
-    image_path = os.path.join(workdir, image_file)
     for key in usb_keys:
         print(f'Applying image {image_file} to key /dev/{key}')
         cmd = f'dd bs=4194304 of=/dev/{key} if={image_path} conv=sync status=progress'
