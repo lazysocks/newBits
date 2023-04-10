@@ -11,6 +11,7 @@ def run_recovery():
         pass
     else:
         print('Not running with sudo priviledges!')
+        exit()
     
     #Check for working directory
     print('Checking for Working Directory...')
@@ -61,10 +62,7 @@ def run_recovery():
     else:
         print("Aborting program...")
         exit()
-
-
- 
-        
+     
 
 
 if __name__ == "__main__":
