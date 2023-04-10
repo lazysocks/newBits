@@ -8,6 +8,7 @@ pathlib = "*"
 requests = "*"
 tqdm = "*"
 psutil = "*"
+setuptools = "*"
 
 [dev-packages]
 pylint = "*"
